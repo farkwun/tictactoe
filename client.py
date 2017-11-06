@@ -12,7 +12,8 @@ if len(sys.argv) <= 1:
     sys.exit()
 
 EXIT_CODES = {
-    'F' : "Server is full! Try again later"
+    'F' : "Server is full! Try again later",
+    'V' : "Thank you for playing!"
 }
 
 DISPLAY = {
@@ -24,6 +25,7 @@ DISPLAY = {
 REGISTER = 'R'
 GAME_START = 'S'
 GAME_INFO  = 'G'
+GAME_OVER = False
 
 BUFLEN = 4096
 
@@ -48,16 +50,20 @@ def display_game(game_info):
 
 def display_thread():
     # this function handles display
-    while True:
+    global GAME_OVER
+    while not GAME_OVER:
         response, _ = sock.recvfrom(BUFLEN)
         if response[0] == GAME_INFO:
             display_game(response[1:])
+        elif response in EXIT_CODES:
+            print(EXIT_CODES[response])
+            GAME_OVER = True
         else:
             print(response)
 
 def input_thread():
     # this function handles user input
-    while True:
+    while not GAME_OVER:
         message = raw_input()
         sock.sendto(message, server_address)
 
@@ -69,7 +75,7 @@ def launch_game():
     display.daemon = True
     input.start()
     display.start()
-    while True:
+    while not GAME_OVER:
         time.sleep(1)
 
 def initialize():
@@ -78,7 +84,7 @@ def initialize():
 
 initialize()
 
-while True:
+while not GAME_OVER:
     response, _ = sock.recvfrom(BUFLEN)
     if response in EXIT_CODES:
         print(EXIT_CODES[response])
