@@ -5,6 +5,7 @@ https://pymotw.com/2/socket/udp.html
 import socket
 import sys
 import threading
+import time
 
 if len(sys.argv) <= 1:
     print("usage: client <PORT NUMBER>")
@@ -62,8 +63,14 @@ def input_thread():
 
 def launch_game():
     # this function launches the game
-    thread.Thread(target=input_thread).start()
-    thread.Thread(target=display_thread).start()
+    input   = threading.Thread(target=input_thread)
+    display = threading.Thread(target=display_thread)
+    input.daemon   = True
+    display.daemon = True
+    input.start()
+    display.start()
+    while True:
+        time.sleep(1)
 
 def initialize():
     print("Connecting to server...")
@@ -78,7 +85,6 @@ while True:
         sys.exit()
     elif response == GAME_START:
         launch_game()
-        break
     else:
         print(response)
 '''
