@@ -38,11 +38,12 @@ def display_game(game_info):
         game_info[i] = DISPLAY[game_info[i]]
 
     print("\nThis is the current game board:\n")
-    print("%s | %s | %s" % (tuple(game_info[:3])))
-    print('-' * 9)
-    print("%s | %s | %s" % (tuple(game_info[3:6])))
-    print('-' * 9)
-    print("%s | %s | %s\n" % (tuple(game_info[6:])))
+    print("   1 | 2 | 3\n")
+    print("A  %s | %s | %s" % (tuple(game_info[:3])))
+    print('  ' + '-' * 9)
+    print("B  %s | %s | %s" % (tuple(game_info[3:6])))
+    print('  ' + '-' * 9)
+    print("C  %s | %s | %s\n" % (tuple(game_info[6:])))
 
 def display_thread():
     # this function handles display
