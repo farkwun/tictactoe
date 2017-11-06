@@ -14,7 +14,9 @@ EXIT_CODES = {
     'F' : "Server is full! Try again later"
 }
 
-GAME_START = 'G'
+REGISTER = 'R'
+GAME_START = 'S'
+GAME_INFO  = 'G'
 
 BUFLEN = 4096
 
@@ -34,25 +36,22 @@ def launch_game():
     # this function launches the game
     return
 
-def handle(response):
+def initialize():
+    print("Connecting to server...")
+    sock.sendto(REGISTER, server_address)
+
+initialize()
+
+while True:
+    response, _ = sock.recvfrom(BUFLEN)
     if response in EXIT_CODES:
         print(EXIT_CODES[response])
         sys.exit()
     elif response == GAME_START:
         launch_game()
+        break
     else:
         print(response)
-
-def register_pdu():
-    return "R"
-
-def initialize():
-    print("Connecting to server...")
-    sock.sendto(register_pdu(), server_address)
-    response, _ = sock.recvfrom(BUFLEN)
-    handle(response)
-
-initialize()
 '''
 while True:
     try:
