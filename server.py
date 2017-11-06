@@ -9,7 +9,39 @@ if len(sys.argv) <= 1:
     print("usage: server <PORT NUMBER>")
     sys.exit()
 
-BUFLEN = 4096
+# Constants
+BUFLEN      = 4096
+MAX_PLAYERS = 2
+SERVER_FULL = 'F'
+GAME_START  = 'S'
+GAME_END   = "V"
+TURN_ERROR  = "\nIt isn't your turn right now.\n"
+INPUT_ERROR = "\nInvalid input: "
+USER_PROMPT_A = "\nIt's your turn! Here are the moves left:\n"
+USER_PROMPT_B = "\nEnter the move you would like to perform:\n"
+VALID_ROWS  = {
+    'A' : 0,
+    'B' : 1,
+    'C' : 2
+}
+VALID_COLS  = {
+    '1' : 0,
+    '2' : 1,
+    '3' : 2
+}
+SYMBOLS     = [
+    'X',
+    'O'
+]
+
+# Globals
+MOVES_LEFT = set()
+NUM_PLAYERS = 0
+GAME_OVER = False
+GAME_BOARD = [['Z'] * 3 for _ in range(3)]
+PLAYERS = {}
+PLAY_ORDER = []
+PLAY_PTR = 0
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -19,15 +51,114 @@ print('Launching server on %s port %s' % server_address)
 
 sock.bind(server_address)
 
-while True:
+def broadcast(message):
+    for address in PLAYERS.keys():
+        sock.sendto(message, address)
+
+def is_valid_move(move):
+    return(len(move) <= 2 and
+           move in MOVES_LEFT and
+           move[0] in VALID_ROWS and
+           move[1] in VALID_COLS)
+
+def is_game_over():
+    return len(MOVES_LEFT) == 0
+
+def initialize_moves_left():
+    for row in VALID_ROWS.keys():
+        for col in VALID_COLS.keys():
+            MOVES_LEFT.add(row + col)
+
+def reset():
+    global GAME_BOARD, GAME_OVER, PLAYERS, NUM_PLAYERS
+    GAME_BOARD  = [['Z'] * 3 for _ in range(3)]
+    GAME_OVER   = False
+    PLAYERS     = {}
+    NUM_PLAYERS = 0
+    initialize_moves_left()
+
+def increment_play_order():
+    global PLAY_PTR
+    PLAY_PTR += 1
+    if PLAY_PTR >= len(PLAY_ORDER):
+        PLAY_PTR = 0
+
+def await_players():
     print("Waiting for players...")
-    data, address = sock.recvfrom(BUFLEN)
+    global NUM_PLAYERS
+    while NUM_PLAYERS < MAX_PLAYERS:
+        _, address = sock.recvfrom(BUFLEN)
+        if address not in PLAYERS:
+            PLAYERS[address] = SYMBOLS[NUM_PLAYERS]
+            PLAY_ORDER.append(address)
+            NUM_PLAYERS += 1
+        broadcast_state()
 
-    print('Received %s bytes from %s' % (len(data), address))
-    print(data)
+def broadcast_state():
+    WAIT_MSG = "\nAwaiting players... (%s/%s)" % (NUM_PLAYERS, MAX_PLAYERS)
+    broadcast(WAIT_MSG)
 
-    if data:
-        sent = sock.sendto(data, address)
-        print('sent %s bytes back to %s' % (sent, address))
-    else:
-        sent = sock.sendto("Did not receive anything", address)
+def broadcast_game():
+    game_state = ['G']
+    for row in range(len(GAME_BOARD)):
+        for col in range(len(GAME_BOARD)):
+            game_state.append(GAME_BOARD[row][col])
+    broadcast(''.join(game_state))
+
+def get_winner():
+    return "Nobody"
+
+def launch_game():
+    broadcast(GAME_START)
+    broadcast("\nGame on!\n")
+    for address in PLAYERS.keys():
+        message = "You are playing %s's" % PLAYERS[address]
+        sock.sendto(message, address)
+    manage_board()
+
+def prompt_player(address):
+    message = USER_PROMPT_A + str(MOVES_LEFT) + USER_PROMPT_B
+    sock.sendto(message, address)
+
+def manage_board():
+    global GAME_OVER
+    while not GAME_OVER:
+        broadcast_game()
+        ACTIVE_PLAYER = PLAY_ORDER[PLAY_PTR]
+        prompt_player(ACTIVE_PLAYER)
+        move, address = sock.recvfrom(BUFLEN)
+        if address != PLAY_ORDER[PLAY_PTR]:
+            sock.sendto(TURN_ERROR, address)
+        elif is_valid_move(move):
+            row = VALID_ROWS[move[0]]
+            col = VALID_COLS[move[1]]
+            GAME_BOARD[row][col] = PLAYERS[address]
+            MOVES_LEFT.remove(move)
+            increment_play_order()
+            GAME_OVER = is_game_over()
+        else:
+            sock.sendto(INPUT_ERROR + move + "\n", address)
+    broadcast_game()
+    message = "%s won!" % get_winner()
+    broadcast(message)
+    broadcast(GAME_END)
+while True:
+    reset()
+    await_players()
+    launch_game()
+    '''
+    while True:
+        print("Waiting for players...")
+        data, address = sock.recvfrom(BUFLEN)
+        if NUM_PLAYERS < 1:
+            if address not in PLAYERS:
+                PLAYERS[address] = SYMBOL
+                SYMBOL = 'X'
+                NUM_PLAYERS += 1
+            elif len(PLAYERS) < 2:
+                if address not in PLAYERS:
+                    PLAYERS[address] = 'O'
+                    NUM_PLAYERS += 1
+                else:
+                    sock.sendto(SERVER_FULL, address)
+                    '''
