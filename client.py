@@ -14,6 +14,12 @@ EXIT_CODES = {
     'F' : "Server is full! Try again later"
 }
 
+DISPLAY = {
+    'X' : 'X',
+    'O' : 'O',
+    'Z' : ' '
+}
+
 REGISTER = 'R'
 GAME_START = 'S'
 GAME_INFO  = 'G'
@@ -24,17 +30,39 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 server_address = ('localhost', int(sys.argv[1]))
 
+def display_game(game_info):
+    # this function handles displaying the game
+    game_info = list(game_info)
+
+    for i in range(len(game_info)):
+        game_info[i] = DISPLAY[game_info[i]]
+
+    print("\nThis is the current game board:\n")
+    print("%s | %s | %s" % (tuple(game_info[:3])))
+    print('-' * 9)
+    print("%s | %s | %s" % (tuple(game_info[3:6])))
+    print('-' * 9)
+    print("%s | %s | %s\n" % (tuple(game_info[6:])))
+
 def display_thread():
     # this function handles display
-    return
+    while True:
+        response, _ = sock.recvfrom(BUFLEN)
+        if response[0] == GAME_INFO:
+            display_game(response[1:])
+        else:
+            print(response)
 
 def input_thread():
     # this function handles user input
-    return
+    while True:
+        message = raw_input()
+        sock.sendto(message, server_address)
 
 def launch_game():
     # this function launches the game
-    return
+    thread.Thread(target=input_thread).start()
+    thread.Thread(target=display_thread).start()
 
 def initialize():
     print("Connecting to server...")
