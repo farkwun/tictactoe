@@ -15,8 +15,8 @@ MAX_PLAYERS = 2
 SERVER_FULL = 'F'
 GAME_START  = 'S'
 GAME_END   = "V"
-TURN_ERROR  = "\nIt isn't your turn right now.\n"
-INPUT_ERROR = "\nInvalid input: "
+TURN_ERROR  = "It isn't your turn right now."
+INPUT_ERROR = "Invalid input: "
 USER_PROMPT_A = "\nIt's your turn! Here are the moves left:\n"
 USER_PROMPT_B = "\nEnter the move you would like to perform:\n"
 VALID_ROWS  = {
@@ -61,9 +61,6 @@ def is_valid_move(move):
            move[0] in VALID_ROWS and
            move[1] in VALID_COLS)
 
-def is_game_over():
-    return len(MOVES_LEFT) == 0
-
 def initialize_moves_left():
     for row in VALID_ROWS.keys():
         for col in VALID_COLS.keys():
@@ -106,7 +103,43 @@ def broadcast_game():
     broadcast(''.join(game_state))
 
 def get_winner():
-    return "Nobody"
+    # check rows
+    for row in range(len(GAME_BOARD)):
+        temp = set(GAME_BOARD[row])
+        if 'Z' in temp or len(temp) != 1:
+            continue
+        else:
+            return temp.pop()
+
+    # check cols
+    for col in range(len(GAME_BOARD[0])):
+        temp = set()
+        for row in range(len(GAME_BOARD)):
+            temp.add(GAME_BOARD[row][col])
+        if 'Z' in temp or len(temp) != 1:
+            continue
+        else:
+            return temp.pop()
+
+    # check diags
+    temp = set()
+    for row in range(len(GAME_BOARD)):
+        temp.add(GAME_BOARD[row][row])
+
+    if 'Z' not in temp and len(temp) == 1:
+        return temp.pop()
+
+    temp = set()
+    for row in range(len(GAME_BOARD)):
+        temp.add(GAME_BOARD[row][len(GAME_BOARD) - row - 1])
+
+    if 'Z' not in temp and len(temp) == 1:
+        return temp.pop()
+
+    if len(MOVES_LEFT) == 0:
+        return "Nobody"
+
+    return None
 
 def launch_game():
     broadcast(GAME_START)
@@ -117,7 +150,7 @@ def launch_game():
     manage_board()
 
 def prompt_player(address):
-    message = USER_PROMPT_A + str(MOVES_LEFT) + USER_PROMPT_B
+    message = USER_PROMPT_A + str(sorted(list(MOVES_LEFT))) + USER_PROMPT_B
     sock.sendto(message, address)
 
 def manage_board():
@@ -127,6 +160,7 @@ def manage_board():
         ACTIVE_PLAYER = PLAY_ORDER[PLAY_PTR]
         prompt_player(ACTIVE_PLAYER)
         move, address = sock.recvfrom(BUFLEN)
+        move = move.upper()
         if address != PLAY_ORDER[PLAY_PTR]:
             sock.sendto(TURN_ERROR, address)
         elif is_valid_move(move):
@@ -135,13 +169,16 @@ def manage_board():
             GAME_BOARD[row][col] = PLAYERS[address]
             MOVES_LEFT.remove(move)
             increment_play_order()
-            GAME_OVER = is_game_over()
+            winner = get_winner()
+            if winner:
+                broadcast_game()
+                message = "%s won!" % get_winner()
+                broadcast(message)
+                broadcast(GAME_END)
+                break
         else:
             sock.sendto(INPUT_ERROR + move + "\n", address)
-    broadcast_game()
-    message = "%s won!" % get_winner()
-    broadcast(message)
-    broadcast(GAME_END)
+
 while True:
     reset()
     await_players()
