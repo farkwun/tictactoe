@@ -172,7 +172,7 @@ def manage_board():
             winner = get_winner()
             if winner:
                 broadcast_game()
-                message = "%s won!" % get_winner()
+                message = "%s won!" % winner()
                 broadcast(message)
                 broadcast(GAME_END)
                 break
@@ -183,19 +183,3 @@ while True:
     reset()
     await_players()
     launch_game()
-    '''
-    while True:
-        print("Waiting for players...")
-        data, address = sock.recvfrom(BUFLEN)
-        if NUM_PLAYERS < 1:
-            if address not in PLAYERS:
-                PLAYERS[address] = SYMBOL
-                SYMBOL = 'X'
-                NUM_PLAYERS += 1
-            elif len(PLAYERS) < 2:
-                if address not in PLAYERS:
-                    PLAYERS[address] = 'O'
-                    NUM_PLAYERS += 1
-                else:
-                    sock.sendto(SERVER_FULL, address)
-                    '''
