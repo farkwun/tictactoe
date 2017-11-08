@@ -41,8 +41,8 @@ SYMBOLS       = [
 MOVES_LEFT = set()
 NUM_PLAYERS = 0
 GAME_BOARD = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
-PLAYERS = {}
-PLAY_ORDER = []
+ROLE = {}
+PLAYERS = []
 PLAY_PTR = 0
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,7 +57,7 @@ def send_to_address(message, address):
     sock.sendto(message, address)
 
 def broadcast(message):
-    for address in PLAYERS.keys():
+    for address in PLAYERS:
         send_to_address(message, address)
 
 def is_valid_move(move):
@@ -72,18 +72,18 @@ def initialize_moves_left():
             MOVES_LEFT.add(row + col)
 
 def reset():
-    global GAME_BOARD, PLAYERS, NUM_PLAYERS, PLAY_ORDER, PLAY_PTR
+    global GAME_BOARD, ROLE, NUM_PLAYERS, PLAYERS, PLAY_PTR
     GAME_BOARD  = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
-    PLAYERS     = {}
+    ROLE     = {}
     NUM_PLAYERS = 0
-    PLAY_ORDER  = []
+    PLAYERS  = []
     PLAY_PTR    = 0
     initialize_moves_left()
 
 def increment_play_order():
     global PLAY_PTR
     PLAY_PTR += 1
-    if PLAY_PTR >= len(PLAY_ORDER):
+    if PLAY_PTR >= len(PLAYERS):
         PLAY_PTR = 0
 
 def await_players():
@@ -91,9 +91,9 @@ def await_players():
     global NUM_PLAYERS
     while NUM_PLAYERS < MAX_PLAYERS:
         _, address = sock.recvfrom(BUFLEN)
-        if address not in PLAYERS:
-            PLAYERS[address] = SYMBOLS[NUM_PLAYERS]
-            PLAY_ORDER.append(address)
+        if address not in ROLE:
+            ROLE[address] = SYMBOLS[NUM_PLAYERS]
+            PLAYERS.append(address)
             NUM_PLAYERS += 1
         broadcast_state()
 
@@ -150,8 +150,8 @@ def get_winner():
 def launch_game():
     broadcast(GAME_START)
     broadcast("\nGame on!\n")
-    for address in PLAYERS.keys():
-        message = "You are playing %s's" % PLAYERS[address]
+    for address in PLAYERS:
+        message = "You are playing %s's" % ROLE[address]
         send_to_address(message, address)
     manage_board()
 
@@ -169,14 +169,14 @@ def set_board_at(move, value):
 def manage_board():
     while True:
         broadcast_game()
-        ACTIVE_PLAYER = PLAY_ORDER[PLAY_PTR]
+        ACTIVE_PLAYER = PLAYERS[PLAY_PTR]
         prompt_player(ACTIVE_PLAYER)
         move, address = sock.recvfrom(BUFLEN)
         move = move.upper()
-        if address != PLAY_ORDER[PLAY_PTR]:
+        if address != PLAYERS[PLAY_PTR]:
             send_to_address(TURN_ERROR, address)
         elif is_valid_move(move):
-            set_board_at(move, PLAYERS[address])
+            set_board_at(move, ROLE[address])
             MOVES_LEFT.remove(move)
             increment_play_order()
             winner = get_winner()
