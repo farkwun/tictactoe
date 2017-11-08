@@ -22,8 +22,8 @@ DISPLAY = {
     'Z' : ' '
 }
 
-REGISTER = 'R'
-GAME_INFO  = 'G'
+REGISTER  = 'R'
+GAME_INFO = 'G'
 GAME_OVER = False
 
 BUFLEN = 4096
@@ -60,7 +60,7 @@ def display_thread():
         else:
             print(response)
 
-def input_thread():
+def user_thread():
     # this function handles user input
     while not GAME_OVER:
         message = raw_input()
@@ -68,11 +68,11 @@ def input_thread():
 
 def launch_game():
     # this function launches the game
-    input   = threading.Thread(target=input_thread)
+    user    = threading.Thread(target=user_thread)
     display = threading.Thread(target=display_thread)
-    input.daemon   = True
+    user.daemon    = True
     display.daemon = True
-    input.start()
+    user.start()
     display.start()
     while not GAME_OVER:
         time.sleep(1)

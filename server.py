@@ -19,6 +19,7 @@ NULL_CHAR     = 'Z'
 GAME_END      = "V"
 TURN_ERROR    = "It isn't your turn right now."
 INPUT_ERROR   = "Invalid input: %s. Try again."
+WAIT_MSG      = "Awaiting players... (%s/%s)"
 ROLE_PROMPT   = "You are playing as: %s\n"
 MOVE_PROMPT   = ("It's your turn! Here are the moves left:\n"
                  "%s\n"
@@ -75,9 +76,9 @@ def initialize_moves_left():
 def reset():
     global GAME_BOARD, ROLE, NUM_PLAYERS, PLAYERS, PLAY_PTR
     GAME_BOARD  = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
-    ROLE     = {}
+    ROLE        = {}
     NUM_PLAYERS = 0
-    PLAYERS  = []
+    PLAYERS     = []
     PLAY_PTR    = 0
     initialize_moves_left()
 
@@ -99,9 +100,8 @@ def await_players():
         broadcast_state()
 
 def broadcast_state():
-    WAIT_MSG = ("\nAwaiting players... (%s/%s)"
-                % (NUM_PLAYERS, MAX_PLAYERS))
-    broadcast(WAIT_MSG)
+    message = WAIT_MSG % (NUM_PLAYERS, MAX_PLAYERS)
+    broadcast(message)
 
 def broadcast_game():
     game_state = ['G']
@@ -143,7 +143,7 @@ def get_winner():
     if is_winning_set(temp):
         return temp.pop()
 
-    if len(MOVES_LEFT) == 0:
+    if not MOVES_LEFT:
         return "Nobody"
 
     return None
