@@ -169,8 +169,8 @@ def set_board_at(move, value):
 
 def get_move_from(player):
     valid_move = None
+    prompt_player(player)
     while not valid_move:
-        prompt_player(player)
         move, address = sock.recvfrom(BUFLEN)
         if address not in ROLE:
             send_to_address(SERVER_FULL, address)
