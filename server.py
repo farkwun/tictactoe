@@ -4,19 +4,13 @@ https://pymotw.com/2/socket/udp.html
 """
 import socket
 import sys
+import shared
 
 if len(sys.argv) <= 1:
     print("usage: server <PORT NUMBER>")
     sys.exit()
 
 # Constants
-BUFLEN        = 4096
-MAX_PLAYERS   = 2
-BOARD_ROWS    = 3
-BOARD_COLS    = 3
-SERVER_FULL   = 'F'
-NULL_CHAR     = 'Z'
-GAME_END      = "V"
 TURN_ERROR    = "It isn't your turn right now."
 INPUT_ERROR   = "Invalid input: %s. Try again."
 WAIT_MSG      = "Awaiting players... (%s/%s)"
@@ -42,7 +36,7 @@ SYMBOLS       = [
 # Globals
 MOVES_LEFT  = set()
 NUM_PLAYERS = 0
-GAME_BOARD  = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
+GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
 ROLE        = {}
 PLAYERS     = []
 PLAY_PTR    = 0
@@ -75,7 +69,7 @@ def initialize_moves_left():
 
 def reset():
     global GAME_BOARD, ROLE, NUM_PLAYERS, PLAYERS, PLAY_PTR
-    GAME_BOARD  = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
+    GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
     ROLE        = {}
     NUM_PLAYERS = 0
     PLAYERS     = []
@@ -91,8 +85,8 @@ def increment_play_order():
 def await_players():
     print("Waiting for players...")
     global NUM_PLAYERS
-    while NUM_PLAYERS < MAX_PLAYERS:
-        _, address = sock.recvfrom(BUFLEN)
+    while NUM_PLAYERS < shared.MAX_PLAYERS:
+        _, address = sock.recvfrom(shared.BUFLEN)
         if address not in ROLE:
             ROLE[address] = SYMBOLS[NUM_PLAYERS]
             PLAYERS.append(address)
@@ -100,7 +94,7 @@ def await_players():
         broadcast_state()
 
 def broadcast_state():
-    message = WAIT_MSG % (NUM_PLAYERS, MAX_PLAYERS)
+    message = WAIT_MSG % (NUM_PLAYERS, shared.MAX_PLAYERS)
     broadcast(message)
 
 def broadcast_game():
@@ -111,34 +105,34 @@ def broadcast_game():
     broadcast(''.join(game_state))
 
 def is_winning_set(char_set):
-    return NULL_CHAR not in char_set and len(char_set) == 1
+    return shared.NULL_CHAR not in char_set and len(char_set) == 1
 
 def get_winner():
     # check rows
-    for row in range(BOARD_ROWS):
+    for row in range(shared.BOARD_ROWS):
         temp = set(GAME_BOARD[row])
         if is_winning_set(temp):
             return temp.pop()
 
     # check cols
-    for col in range(BOARD_COLS):
+    for col in range(shared.BOARD_COLS):
         temp = set()
-        for row in range(BOARD_ROWS):
+        for row in range(shared.BOARD_ROWS):
             temp.add(GAME_BOARD[row][col])
         if is_winning_set(temp):
             return temp.pop()
 
     # check diags
     temp = set()
-    for row in range(BOARD_ROWS):
+    for row in range(shared.BOARD_ROWS):
         temp.add(GAME_BOARD[row][row])
 
     if is_winning_set(temp):
         return temp.pop()
 
     temp = set()
-    for row in range(BOARD_ROWS):
-        temp.add(GAME_BOARD[row][BOARD_ROWS - row - 1])
+    for row in range(shared.BOARD_ROWS):
+        temp.add(GAME_BOARD[row][shared.BOARD_ROWS - row - 1])
 
     if is_winning_set(temp):
         return temp.pop()
@@ -171,9 +165,9 @@ def get_move_from(player):
     valid_move = None
     prompt_player(player)
     while not valid_move:
-        move, address = sock.recvfrom(BUFLEN)
+        move, address = sock.recvfrom(shared.BUFLEN)
         if address not in ROLE:
-            send_to_address(SERVER_FULL, address)
+            send_to_address(shared.SERVER_FULL, address)
             continue
         move = move.upper()
         if address != player:
@@ -197,7 +191,7 @@ def manage_board():
             broadcast_game()
             message = "%s won!" % winner
             broadcast(message)
-            broadcast(GAME_END)
+            broadcast(shared.GAME_END)
             break
 
 while True:

@@ -6,24 +6,23 @@ import socket
 import sys
 import threading
 import time
+import shared
 
 if len(sys.argv) <= 1:
     print("usage: client <PORT NUMBER>")
     sys.exit()
 
 EXIT_CODES = {
-    'F' : "Server is full! Try again later",
-    'V' : "Thank you for playing!"
+    shared.SERVER_FULL : "Server is full! Try again later",
+    shared.GAME_END : "Thank you for playing!"
 }
 
 DISPLAY = {
     'X' : 'X',
     'O' : 'O',
-    'Z' : ' '
+    shared.NULL_CHAR : ' '
 }
 
-REGISTER  = 'R'
-GAME_INFO = 'G'
 GAME_OVER = False
 
 BUFLEN = 4096
@@ -52,7 +51,7 @@ def display_thread():
     global GAME_OVER
     while not GAME_OVER:
         response, _ = sock.recvfrom(BUFLEN)
-        if response[0] == GAME_INFO:
+        if response[0] == shared.GAME_INFO:
             display_game(response[1:])
         elif response in EXIT_CODES:
             print(EXIT_CODES[response])
@@ -79,7 +78,7 @@ def launch_game():
 
 def initialize():
     print("Connecting to server...")
-    sock.sendto(REGISTER, server_address)
+    sock.sendto(shared.REGISTER, server_address)
 
 initialize()
 launch_game()
