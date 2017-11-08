@@ -15,7 +15,6 @@ MAX_PLAYERS   = 2
 BOARD_ROWS    = 3
 BOARD_COLS    = 3
 SERVER_FULL   = 'F'
-GAME_START    = 'S'
 NULL_CHAR     = 'Z'
 GAME_END      = "V"
 TURN_ERROR    = "It isn't your turn right now."
@@ -150,7 +149,6 @@ def get_winner():
     return None
 
 def launch_game():
-    broadcast(GAME_START)
     broadcast("\nGame on!\n")
     for address in PLAYERS:
         message = ROLE_PROMPT % ROLE[address]

@@ -23,7 +23,6 @@ DISPLAY = {
 }
 
 REGISTER = 'R'
-GAME_START = 'S'
 GAME_INFO  = 'G'
 GAME_OVER = False
 
@@ -83,25 +82,4 @@ def initialize():
     sock.sendto(REGISTER, server_address)
 
 initialize()
-
-while not GAME_OVER:
-    response, _ = sock.recvfrom(BUFLEN)
-    if response in EXIT_CODES:
-        print(EXIT_CODES[response])
-        sys.exit()
-    elif response == GAME_START:
-        launch_game()
-    else:
-        print(response)
-'''
-while True:
-    try:
-        message = raw_input('Enter your message:\n')
-        sock.sendto(message, server_address)
-
-        data, server = sock.recvfrom(BUFLEN)
-        print("SERVER SAYS: " + data)
-    except:
-        print("Unexpected Error! - "+ sys.exc_info()[0])
-        raise
-'''
+launch_game()
