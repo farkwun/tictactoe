@@ -18,7 +18,7 @@ SERVER_FULL   = 'F'
 NULL_CHAR     = 'Z'
 GAME_END      = "V"
 TURN_ERROR    = "It isn't your turn right now."
-INPUT_ERROR   = "Invalid input: "
+INPUT_ERROR   = "Invalid input: %s. Try again."
 ROLE_PROMPT   = "You are playing as: %s\n"
 MOVE_PROMPT   = ("It's your turn! Here are the moves left:\n"
                  "%s\n"
@@ -181,7 +181,7 @@ def get_move_from(player):
         elif is_valid_move(move):
             valid_move = move
         else:
-            send_to_address(INPUT_ERROR + move + "\n", address)
+            send_to_address(INPUT_ERROR % move, address)
 
     return valid_move
 
