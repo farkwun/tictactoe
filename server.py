@@ -37,7 +37,6 @@ SYMBOLS     = [
 # Globals
 MOVES_LEFT = set()
 NUM_PLAYERS = 0
-GAME_OVER = False
 GAME_BOARD = [['Z'] * 3 for _ in range(3)]
 PLAYERS = {}
 PLAY_ORDER = []
@@ -67,9 +66,8 @@ def initialize_moves_left():
             MOVES_LEFT.add(row + col)
 
 def reset():
-    global GAME_BOARD, GAME_OVER, PLAYERS, NUM_PLAYERS
+    global GAME_BOARD, PLAYERS, NUM_PLAYERS
     GAME_BOARD  = [['Z'] * 3 for _ in range(3)]
-    GAME_OVER   = False
     PLAYERS     = {}
     NUM_PLAYERS = 0
     initialize_moves_left()
@@ -154,8 +152,7 @@ def prompt_player(address):
     sock.sendto(message, address)
 
 def manage_board():
-    global GAME_OVER
-    while not GAME_OVER:
+    while True:
         broadcast_game()
         ACTIVE_PLAYER = PLAY_ORDER[PLAY_PTR]
         prompt_player(ACTIVE_PLAYER)
