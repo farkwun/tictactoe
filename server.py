@@ -63,7 +63,6 @@ def broadcast(message):
         send_to_address(message, address)
 
 def is_valid_move(move):
-    move = move.upper()
     return(len(move) <= 2 and
            move in MOVES_LEFT and
            move[0] in VALID_ROWS and
@@ -175,6 +174,7 @@ def get_move_from(player):
     while not valid_move:
         prompt_player(player)
         move, address = sock.recvfrom(BUFLEN)
+        move = move.upper()
         if address != player:
             send_to_address(TURN_ERROR, address)
         elif is_valid_move(move):
