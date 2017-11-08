@@ -33,13 +33,16 @@ SYMBOLS       = [
     'O'
 ]
 
-# Globals
-MOVES_LEFT  = set()
-NUM_PLAYERS = 0
-GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
-ROLE        = {}
-PLAYERS     = []
-PLAY_PTR    = 0
+class Board(object):
+    def __init__(self):
+        self.MOVES_LEFT  = set()
+        self.NUM_PLAYERS = 0
+        self.GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
+        self.ROLE        = {}
+        self.PLAYERS     = []
+        self.PLAY_PTR    = 0
+
+BOARD = Board()
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -53,55 +56,49 @@ def send_to_address(message, address):
     sock.sendto(message, address)
 
 def broadcast(message):
-    for address in PLAYERS:
+    for address in BOARD.PLAYERS:
         send_to_address(message, address)
 
 def is_valid_move(move):
     return(len(move) <= 2 and
-           move in MOVES_LEFT and
+           move in BOARD.MOVES_LEFT and
            move[0] in VALID_ROWS and
            move[1] in VALID_COLS)
 
 def initialize_moves_left():
     for row in VALID_ROWS.keys():
         for col in VALID_COLS.keys():
-            MOVES_LEFT.add(row + col)
+            BOARD.MOVES_LEFT.add(row + col)
 
 def reset():
-    global GAME_BOARD, ROLE, NUM_PLAYERS, PLAYERS, PLAY_PTR
-    GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
-    ROLE        = {}
-    NUM_PLAYERS = 0
-    PLAYERS     = []
-    PLAY_PTR    = 0
+    global BOARD
+    BOARD = Board()
     initialize_moves_left()
 
 def increment_play_order():
-    global PLAY_PTR
-    PLAY_PTR += 1
-    if PLAY_PTR >= len(PLAYERS):
-        PLAY_PTR = 0
+    BOARD.PLAY_PTR += 1
+    if BOARD.PLAY_PTR >= len(BOARD.PLAYERS):
+        BOARD.PLAY_PTR = 0
 
 def await_players():
     print("Waiting for players...")
-    global NUM_PLAYERS
-    while NUM_PLAYERS < shared.MAX_PLAYERS:
+    while BOARD.NUM_PLAYERS < shared.MAX_PLAYERS:
         _, address = sock.recvfrom(shared.BUFLEN)
-        if address not in ROLE:
-            ROLE[address] = SYMBOLS[NUM_PLAYERS]
-            PLAYERS.append(address)
-            NUM_PLAYERS += 1
+        if address not in BOARD.ROLE:
+            BOARD.ROLE[address] = SYMBOLS[BOARD.NUM_PLAYERS]
+            BOARD.PLAYERS.append(address)
+            BOARD.NUM_PLAYERS += 1
         broadcast_state()
 
 def broadcast_state():
-    message = WAIT_MSG % (NUM_PLAYERS, shared.MAX_PLAYERS)
+    message = WAIT_MSG % (BOARD.NUM_PLAYERS, shared.MAX_PLAYERS)
     broadcast(message)
 
 def broadcast_game():
     game_state = ['G']
-    for row in range(len(GAME_BOARD)):
-        for col in range(len(GAME_BOARD)):
-            game_state.append(GAME_BOARD[row][col])
+    for row in range(len(BOARD.GAME_BOARD)):
+        for col in range(len(BOARD.GAME_BOARD)):
+            game_state.append(BOARD.GAME_BOARD[row][col])
     broadcast(''.join(game_state))
 
 def is_winning_set(char_set):
@@ -110,7 +107,7 @@ def is_winning_set(char_set):
 def get_winner():
     # check rows
     for row in range(shared.BOARD_ROWS):
-        temp = set(GAME_BOARD[row])
+        temp = set(BOARD.GAME_BOARD[row])
         if is_winning_set(temp):
             return temp.pop()
 
@@ -118,55 +115,54 @@ def get_winner():
     for col in range(shared.BOARD_COLS):
         temp = set()
         for row in range(shared.BOARD_ROWS):
-            temp.add(GAME_BOARD[row][col])
+            temp.add(BOARD.GAME_BOARD[row][col])
         if is_winning_set(temp):
             return temp.pop()
 
     # check diags
     temp = set()
     for row in range(shared.BOARD_ROWS):
-        temp.add(GAME_BOARD[row][row])
+        temp.add(BOARD.GAME_BOARD[row][row])
 
     if is_winning_set(temp):
         return temp.pop()
 
     temp = set()
     for row in range(shared.BOARD_ROWS):
-        temp.add(GAME_BOARD[row][shared.BOARD_ROWS - row - 1])
+        temp.add(BOARD.GAME_BOARD[row][shared.BOARD_ROWS - row - 1])
 
     if is_winning_set(temp):
         return temp.pop()
 
-    if not MOVES_LEFT:
+    if not BOARD.MOVES_LEFT:
         return "Nobody"
 
     return None
 
 def launch_game():
     broadcast("\nGame on!\n")
-    for address in PLAYERS:
-        message = ROLE_PROMPT % ROLE[address]
+    for address in BOARD.PLAYERS:
+        message = ROLE_PROMPT % BOARD.ROLE[address]
         send_to_address(message, address)
     manage_board()
 
 def prompt_player(address):
-    message = (ROLE_PROMPT % ROLE[address] +
-               MOVE_PROMPT % str(sorted(list(MOVES_LEFT))))
+    message = (ROLE_PROMPT % BOARD.ROLE[address] +
+               MOVE_PROMPT % str(sorted(list(BOARD.MOVES_LEFT))))
     send_to_address(message, address)
 
 def set_board_at(move, value):
-    global MOVES_LEFT
     row = VALID_ROWS[move[0]]
     col = VALID_COLS[move[1]]
-    GAME_BOARD[row][col] = value
-    MOVES_LEFT.remove(move)
+    BOARD.GAME_BOARD[row][col] = value
+    BOARD.MOVES_LEFT.remove(move)
 
 def get_move_from(player):
     valid_move = None
     prompt_player(player)
     while not valid_move:
         move, address = sock.recvfrom(shared.BUFLEN)
-        if address not in ROLE:
+        if address not in BOARD.ROLE:
             send_to_address(shared.SERVER_FULL, address)
             continue
         move = move.upper()
@@ -182,9 +178,9 @@ def get_move_from(player):
 def manage_board():
     while True:
         broadcast_game()
-        active_player = PLAYERS[PLAY_PTR]
+        active_player = BOARD.PLAYERS[BOARD.PLAY_PTR]
         move = get_move_from(active_player)
-        set_board_at(move, ROLE[active_player])
+        set_board_at(move, BOARD.ROLE[active_player])
         increment_play_order()
         winner = get_winner()
         if winner:
