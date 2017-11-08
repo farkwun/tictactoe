@@ -61,6 +61,7 @@ def broadcast(message):
         send_to_address(message, address)
 
 def is_valid_move(move):
+    move = move.upper()
     return(len(move) <= 2 and
            move in MOVES_LEFT and
            move[0] in VALID_ROWS and
@@ -162,32 +163,40 @@ def prompt_player(address):
     send_to_address(message, address)
 
 def set_board_at(move, value):
+    global MOVES_LEFT
     row = VALID_ROWS[move[0]]
     col = VALID_COLS[move[1]]
     GAME_BOARD[row][col] = value
+    MOVES_LEFT.remove(move)
+
+def get_move_from(player):
+    valid_move = None
+    while not valid_move:
+        prompt_player(player)
+        move, address = sock.recvfrom(BUFLEN)
+        if address != player:
+            send_to_address(TURN_ERROR, address)
+        elif is_valid_move(move):
+            valid_move = move
+        else:
+            send_to_address(INPUT_ERROR + move + "\n", address)
+
+    return valid_move
 
 def manage_board():
     while True:
         broadcast_game()
-        ACTIVE_PLAYER = PLAYERS[PLAY_PTR]
-        prompt_player(ACTIVE_PLAYER)
-        move, address = sock.recvfrom(BUFLEN)
-        move = move.upper()
-        if address != PLAYERS[PLAY_PTR]:
-            send_to_address(TURN_ERROR, address)
-        elif is_valid_move(move):
-            set_board_at(move, ROLE[address])
-            MOVES_LEFT.remove(move)
-            increment_play_order()
-            winner = get_winner()
-            if winner:
-                broadcast_game()
-                message = "%s won!" % winner
-                broadcast(message)
-                broadcast(GAME_END)
-                break
-            else:
-                send_to_address(INPUT_ERROR + move + "\n", address)
+        active_player = PLAYERS[PLAY_PTR]
+        move = get_move_from(active_player)
+        set_board_at(move, ROLE[active_player])
+        increment_play_order()
+        winner = get_winner()
+        if winner:
+            broadcast_game()
+            message = "%s won!" % winner
+            broadcast(message)
+            broadcast(GAME_END)
+            break
 
 while True:
     reset()
