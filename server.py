@@ -35,12 +35,20 @@ SYMBOLS       = [
 
 class Board(object):
     def __init__(self):
-        self.MOVES_LEFT  = set()
-        self.NUM_PLAYERS = 0
-        self.GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
         self.ROLE        = {}
         self.PLAYERS     = []
         self.PLAY_PTR    = 0
+        self.NUM_PLAYERS = 0
+        self.GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
+        self.MOVES_LEFT  = self.move_set()
+
+    def move_set(self):
+        moves = set()
+        for row in VALID_ROWS.keys():
+            for col in VALID_COLS.keys():
+                moves.add(row + col)
+        return moves
+
 
 BOARD = Board()
 
@@ -65,15 +73,9 @@ def is_valid_move(move):
            move[0] in VALID_ROWS and
            move[1] in VALID_COLS)
 
-def initialize_moves_left():
-    for row in VALID_ROWS.keys():
-        for col in VALID_COLS.keys():
-            BOARD.MOVES_LEFT.add(row + col)
-
 def reset():
     global BOARD
     BOARD = Board()
-    initialize_moves_left()
 
 def increment_play_order():
     BOARD.PLAY_PTR += 1
