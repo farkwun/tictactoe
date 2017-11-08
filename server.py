@@ -172,6 +172,9 @@ def get_move_from(player):
     while not valid_move:
         prompt_player(player)
         move, address = sock.recvfrom(BUFLEN)
+        if address not in ROLE:
+            send_to_address(SERVER_FULL, address)
+            continue
         move = move.upper()
         if address != player:
             send_to_address(TURN_ERROR, address)
