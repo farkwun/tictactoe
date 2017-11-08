@@ -53,9 +53,12 @@ print('Launching server on %s port %s' % server_address)
 
 sock.bind(server_address)
 
+def send_to_address(message, address):
+    sock.sendto(message, address)
+
 def broadcast(message):
     for address in PLAYERS.keys():
-        sock.sendto(message, address)
+        send_to_address(message, address)
 
 def is_valid_move(move):
     return(len(move) <= 2 and
@@ -95,7 +98,8 @@ def await_players():
         broadcast_state()
 
 def broadcast_state():
-    WAIT_MSG = "\nAwaiting players... (%s/%s)" % (NUM_PLAYERS, MAX_PLAYERS)
+    WAIT_MSG = ("\nAwaiting players... (%s/%s)"
+                % (NUM_PLAYERS, MAX_PLAYERS))
     broadcast(WAIT_MSG)
 
 def broadcast_game():
@@ -148,12 +152,19 @@ def launch_game():
     broadcast("\nGame on!\n")
     for address in PLAYERS.keys():
         message = "You are playing %s's" % PLAYERS[address]
-        sock.sendto(message, address)
+        send_to_address(message, address)
     manage_board()
 
 def prompt_player(address):
-    message = USER_PROMPT_A + str(sorted(list(MOVES_LEFT))) + USER_PROMPT_B
-    sock.sendto(message, address)
+    message = (USER_PROMPT_A +
+               str(sorted(list(MOVES_LEFT))) +
+               USER_PROMPT_B)
+    send_to_address(message, address)
+
+def set_board_at(move, value):
+    row = VALID_ROWS[move[0]]
+    col = VALID_COLS[move[1]]
+    GAME_BOARD[row][col] = value
 
 def manage_board():
     while True:
@@ -163,11 +174,9 @@ def manage_board():
         move, address = sock.recvfrom(BUFLEN)
         move = move.upper()
         if address != PLAY_ORDER[PLAY_PTR]:
-            sock.sendto(TURN_ERROR, address)
+            send_to_address(TURN_ERROR, address)
         elif is_valid_move(move):
-            row = VALID_ROWS[move[0]]
-            col = VALID_COLS[move[1]]
-            GAME_BOARD[row][col] = PLAYERS[address]
+            set_board_at(move, PLAYERS[address])
             MOVES_LEFT.remove(move)
             increment_play_order()
             winner = get_winner()
@@ -177,8 +186,8 @@ def manage_board():
                 broadcast(message)
                 broadcast(GAME_END)
                 break
-        else:
-            sock.sendto(INPUT_ERROR + move + "\n", address)
+            else:
+                send_to_address(INPUT_ERROR + move + "\n", address)
 
 while True:
     reset()
