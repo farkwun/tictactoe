@@ -20,8 +20,10 @@ NULL_CHAR     = 'Z'
 GAME_END      = "V"
 TURN_ERROR    = "It isn't your turn right now."
 INPUT_ERROR   = "Invalid input: "
-USER_PROMPT_A = "\nIt's your turn! Here are the moves left:\n"
-USER_PROMPT_B = "\nEnter the move you would like to perform:\n"
+ROLE_PROMPT   = "You are playing as: %s\n"
+MOVE_PROMPT   = ("It's your turn! Here are the moves left:\n"
+                 "%s\n"
+                 "Enter the move you would like to perform:\n")
 VALID_ROWS    = {
     'A' : 0,
     'B' : 1,
@@ -152,14 +154,13 @@ def launch_game():
     broadcast(GAME_START)
     broadcast("\nGame on!\n")
     for address in PLAYERS:
-        message = "You are playing %s's" % ROLE[address]
+        message = ROLE_PROMPT % ROLE[address]
         send_to_address(message, address)
     manage_board()
 
 def prompt_player(address):
-    message = (USER_PROMPT_A +
-               str(sorted(list(MOVES_LEFT))) +
-               USER_PROMPT_B)
+    message = (ROLE_PROMPT % ROLE[address] +
+               MOVE_PROMPT % str(sorted(list(MOVES_LEFT))))
     send_to_address(message, address)
 
 def set_board_at(move, value):
