@@ -40,12 +40,12 @@ SYMBOLS       = [
 ]
 
 # Globals
-MOVES_LEFT = set()
+MOVES_LEFT  = set()
 NUM_PLAYERS = 0
-GAME_BOARD = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
-ROLE = {}
-PLAYERS = []
-PLAY_PTR = 0
+GAME_BOARD  = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
+ROLE        = {}
+PLAYERS     = []
+PLAY_PTR    = 0
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
