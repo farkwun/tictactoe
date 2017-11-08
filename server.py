@@ -169,7 +169,7 @@ def manage_board():
             winner = get_winner()
             if winner:
                 broadcast_game()
-                message = "%s won!" % winner()
+                message = "%s won!" % winner
                 broadcast(message)
                 broadcast(GAME_END)
                 break
