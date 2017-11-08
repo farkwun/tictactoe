@@ -10,26 +10,29 @@ if len(sys.argv) <= 1:
     sys.exit()
 
 # Constants
-BUFLEN      = 4096
-MAX_PLAYERS = 2
-SERVER_FULL = 'F'
-GAME_START  = 'S'
-GAME_END   = "V"
-TURN_ERROR  = "It isn't your turn right now."
-INPUT_ERROR = "Invalid input: "
+BUFLEN        = 4096
+MAX_PLAYERS   = 2
+BOARD_ROWS    = 3
+BOARD_COLS    = 3
+SERVER_FULL   = 'F'
+GAME_START    = 'S'
+NULL_CHAR     = 'Z'
+GAME_END      = "V"
+TURN_ERROR    = "It isn't your turn right now."
+INPUT_ERROR   = "Invalid input: "
 USER_PROMPT_A = "\nIt's your turn! Here are the moves left:\n"
 USER_PROMPT_B = "\nEnter the move you would like to perform:\n"
-VALID_ROWS  = {
+VALID_ROWS    = {
     'A' : 0,
     'B' : 1,
     'C' : 2
 }
-VALID_COLS  = {
+VALID_COLS    = {
     '1' : 0,
     '2' : 1,
     '3' : 2
 }
-SYMBOLS     = [
+SYMBOLS       = [
     'X',
     'O'
 ]
@@ -37,7 +40,7 @@ SYMBOLS     = [
 # Globals
 MOVES_LEFT = set()
 NUM_PLAYERS = 0
-GAME_BOARD = [['Z'] * 3 for _ in range(3)]
+GAME_BOARD = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
 PLAYERS = {}
 PLAY_ORDER = []
 PLAY_PTR = 0
@@ -67,7 +70,7 @@ def initialize_moves_left():
 
 def reset():
     global GAME_BOARD, PLAYERS, NUM_PLAYERS, PLAY_ORDER, PLAY_PTR
-    GAME_BOARD  = [['Z'] * 3 for _ in range(3)]
+    GAME_BOARD  = [[NULL_CHAR] * BOARD_COLS for _ in range(BOARD_ROWS)]
     PLAYERS     = {}
     NUM_PLAYERS = 0
     PLAY_ORDER  = []
@@ -102,38 +105,37 @@ def broadcast_game():
             game_state.append(GAME_BOARD[row][col])
     broadcast(''.join(game_state))
 
+def is_winning_set(char_set):
+    return NULL_CHAR not in char_set and len(char_set) == 1
+
 def get_winner():
     # check rows
-    for row in range(len(GAME_BOARD)):
+    for row in range(BOARD_ROWS):
         temp = set(GAME_BOARD[row])
-        if 'Z' in temp or len(temp) != 1:
-            continue
-        else:
+        if is_winning_set(temp):
             return temp.pop()
 
     # check cols
-    for col in range(len(GAME_BOARD[0])):
+    for col in range(BOARD_COLS):
         temp = set()
-        for row in range(len(GAME_BOARD)):
+        for row in range(BOARD_ROWS):
             temp.add(GAME_BOARD[row][col])
-        if 'Z' in temp or len(temp) != 1:
-            continue
-        else:
+        if is_winning_set(temp):
             return temp.pop()
 
     # check diags
     temp = set()
-    for row in range(len(GAME_BOARD)):
+    for row in range(BOARD_ROWS):
         temp.add(GAME_BOARD[row][row])
 
-    if 'Z' not in temp and len(temp) == 1:
+    if is_winning_set(temp):
         return temp.pop()
 
     temp = set()
-    for row in range(len(GAME_BOARD)):
-        temp.add(GAME_BOARD[row][len(GAME_BOARD) - row - 1])
+    for row in range(BOARD_ROWS):
+        temp.add(GAME_BOARD[row][BOARD_ROWS - row - 1])
 
-    if 'Z' not in temp and len(temp) == 1:
+    if is_winning_set(temp):
         return temp.pop()
 
     if len(MOVES_LEFT) == 0:
