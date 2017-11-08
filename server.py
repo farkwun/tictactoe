@@ -66,10 +66,12 @@ def initialize_moves_left():
             MOVES_LEFT.add(row + col)
 
 def reset():
-    global GAME_BOARD, PLAYERS, NUM_PLAYERS
+    global GAME_BOARD, PLAYERS, NUM_PLAYERS, PLAY_ORDER, PLAY_PTR
     GAME_BOARD  = [['Z'] * 3 for _ in range(3)]
     PLAYERS     = {}
     NUM_PLAYERS = 0
+    PLAY_ORDER  = []
+    PLAY_PTR    = 0
     initialize_moves_left()
 
 def increment_play_order():
