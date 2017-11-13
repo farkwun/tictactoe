@@ -25,8 +25,6 @@ DISPLAY = {
 
 GAME_OVER = False
 
-BUFLEN = 4096
-
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 server_address = ('localhost', int(sys.argv[1]))
@@ -50,7 +48,7 @@ def display_thread():
     # this function handles display
     global GAME_OVER
     while not GAME_OVER:
-        response, _ = sock.recvfrom(BUFLEN)
+        response, _ = sock.recvfrom(shared.BUFLEN)
         if response[0] == shared.GAME_INFO:
             display_game(response[1:])
         elif response in EXIT_CODES:
