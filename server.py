@@ -40,7 +40,10 @@ class Board(object):
         self.PLAYERS = []
         self.PLAY_PTR = 0
         self.NUM_PLAYERS = 0
-        self.GAME_BOARD = [[tictactoe.shared.NULL_CHAR] * tictactoe.shared.BOARD_COLS for _ in range(tictactoe.shared.BOARD_ROWS)]
+        self.GAME_BOARD = [
+            [tictactoe.shared.NULL_CHAR] * tictactoe.shared.BOARD_COLS
+            for _ in range(tictactoe.shared.BOARD_ROWS)
+        ]
         self.MOVES_LEFT = self.move_set()
 
     def move_set(self):
@@ -105,7 +108,8 @@ def broadcast_game():
     broadcast(''.join(game_state))
 
 def is_winning_set(char_set):
-    return tictactoe.shared.NULL_CHAR not in char_set and len(char_set) == 1
+    return (tictactoe.shared.NULL_CHAR not in char_set and
+            len(char_set) == 1)
 
 def get_winner():
     # check rows
