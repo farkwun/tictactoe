@@ -66,9 +66,9 @@ def user_thread():
 
 def launch_game():
     # this function launches the game
-    user    = threading.Thread(target=user_thread)
+    user = threading.Thread(target=user_thread)
     display = threading.Thread(target=display_thread)
-    user.daemon    = True
+    user.daemon = True
     display.daemon = True
     user.start()
     display.start()
