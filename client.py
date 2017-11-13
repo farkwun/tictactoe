@@ -6,21 +6,22 @@ import socket
 import sys
 import threading
 import time
-import shared
+
+import tictactoe.shared
 
 if len(sys.argv) <= 1:
     print("usage: client <PORT NUMBER>")
     sys.exit()
 
 EXIT_CODES = {
-    shared.SERVER_FULL : "Server is full! Try again later",
-    shared.GAME_END : "Thank you for playing!"
+    tictactoe.shared.SERVER_FULL : "Server is full! Try again later",
+    tictactoe.shared.GAME_END : "Thank you for playing!"
 }
 
 DISPLAY = {
     'X': 'X',
     'O': 'O',
-    shared.NULL_CHAR: ' '
+    tictactoe.shared.NULL_CHAR: ' '
 }
 
 GAME_OVER = False
@@ -48,8 +49,8 @@ def display_thread():
     # this function handles display
     global GAME_OVER
     while not GAME_OVER:
-        response, _ = sock.recvfrom(shared.BUFLEN)
-        if response[0] == shared.GAME_INFO:
+        response, _ = sock.recvfrom(tictactoe.shared.BUFLEN)
+        if response[0] == tictactoe.shared.GAME_INFO:
             display_game(response[1:])
         elif response in EXIT_CODES:
             print(EXIT_CODES[response])
@@ -76,7 +77,7 @@ def launch_game():
 
 def initialize():
     print("Connecting to server...")
-    sock.sendto(shared.REGISTER, server_address)
+    sock.sendto(tictactoe.shared.REGISTER, server_address)
 
 initialize()
 launch_game()

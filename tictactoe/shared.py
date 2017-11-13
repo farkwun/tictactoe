@@ -4,7 +4,6 @@ This file holds all the constants shared between:
     server.py
 """
 
-
 # Packet codes
 SERVER_FULL = 'F'
 GAME_INFO = 'G'

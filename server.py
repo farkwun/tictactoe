@@ -4,7 +4,8 @@ https://pymotw.com/2/socket/udp.html
 """
 import socket
 import sys
-import shared
+
+import tictactoe.shared
 
 if len(sys.argv) <= 1:
     print("usage: server <PORT NUMBER>")
@@ -39,7 +40,7 @@ class Board(object):
         self.PLAYERS = []
         self.PLAY_PTR = 0
         self.NUM_PLAYERS = 0
-        self.GAME_BOARD = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
+        self.GAME_BOARD = [[tictactoe.shared.NULL_CHAR] * tictactoe.shared.BOARD_COLS for _ in range(tictactoe.shared.BOARD_ROWS)]
         self.MOVES_LEFT = self.move_set()
 
     def move_set(self):
@@ -84,8 +85,8 @@ def increment_play_order():
 
 def await_players():
     print("Waiting for players...")
-    while BOARD.NUM_PLAYERS < shared.MAX_PLAYERS:
-        _, address = sock.recvfrom(shared.BUFLEN)
+    while BOARD.NUM_PLAYERS < tictactoe.shared.MAX_PLAYERS:
+        _, address = sock.recvfrom(tictactoe.shared.BUFLEN)
         if address not in BOARD.ROLE:
             BOARD.ROLE[address] = SYMBOLS[BOARD.NUM_PLAYERS]
             BOARD.PLAYERS.append(address)
@@ -93,7 +94,7 @@ def await_players():
         broadcast_state()
 
 def broadcast_state():
-    message = WAIT_MSG % (BOARD.NUM_PLAYERS, shared.MAX_PLAYERS)
+    message = WAIT_MSG % (BOARD.NUM_PLAYERS, tictactoe.shared.MAX_PLAYERS)
     broadcast(message)
 
 def broadcast_game():
@@ -104,34 +105,34 @@ def broadcast_game():
     broadcast(''.join(game_state))
 
 def is_winning_set(char_set):
-    return shared.NULL_CHAR not in char_set and len(char_set) == 1
+    return tictactoe.shared.NULL_CHAR not in char_set and len(char_set) == 1
 
 def get_winner():
     # check rows
-    for row in range(shared.BOARD_ROWS):
+    for row in range(tictactoe.shared.BOARD_ROWS):
         temp = set(BOARD.GAME_BOARD[row])
         if is_winning_set(temp):
             return temp.pop()
 
     # check cols
-    for col in range(shared.BOARD_COLS):
+    for col in range(tictactoe.shared.BOARD_COLS):
         temp = set()
-        for row in range(shared.BOARD_ROWS):
+        for row in range(tictactoe.shared.BOARD_ROWS):
             temp.add(BOARD.GAME_BOARD[row][col])
         if is_winning_set(temp):
             return temp.pop()
 
     # check diags
     temp = set()
-    for row in range(shared.BOARD_ROWS):
+    for row in range(tictactoe.shared.BOARD_ROWS):
         temp.add(BOARD.GAME_BOARD[row][row])
 
     if is_winning_set(temp):
         return temp.pop()
 
     temp = set()
-    for row in range(shared.BOARD_ROWS):
-        temp.add(BOARD.GAME_BOARD[row][shared.BOARD_ROWS - row - 1])
+    for row in range(tictactoe.shared.BOARD_ROWS):
+        temp.add(BOARD.GAME_BOARD[row][tictactoe.shared.BOARD_ROWS - row - 1])
 
     if is_winning_set(temp):
         return temp.pop()
@@ -163,9 +164,9 @@ def get_move_from(player):
     valid_move = None
     prompt_player(player)
     while not valid_move:
-        move, address = sock.recvfrom(shared.BUFLEN)
+        move, address = sock.recvfrom(tictactoe.shared.BUFLEN)
         if address not in BOARD.ROLE:
-            send_to_address(shared.SERVER_FULL, address)
+            send_to_address(tictactoe.shared.SERVER_FULL, address)
             continue
         move = move.upper()
         if address != player:
@@ -189,7 +190,7 @@ def manage_board():
             broadcast_game()
             message = "%s won!" % winner
             broadcast(message)
-            broadcast(shared.GAME_END)
+            broadcast(tictactoe.shared.GAME_END)
             break
 
 while True:
