@@ -12,7 +12,7 @@ GAME_END    = 'V'
 REGISTER    = 'R'
 
 # Packet constants
-BUFLEN      = 128
+BUFLEN      = 512
 
 # Board constants
 NULL_CHAR   = 'Z'
