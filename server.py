@@ -11,36 +11,36 @@ if len(sys.argv) <= 1:
     sys.exit()
 
 # Constants
-TURN_ERROR    = "It isn't your turn right now."
-INPUT_ERROR   = "Invalid input: %s. Try again."
-WAIT_MSG      = "Awaiting players... (%s/%s)"
-ROLE_PROMPT   = "You are playing as: %s\n"
-MOVE_PROMPT   = ("It's your turn! Here are the moves left:\n"
-                 "%s\n"
-                 "Enter the move you would like to perform:\n")
-VALID_ROWS    = {
-    'A' : 0,
-    'B' : 1,
-    'C' : 2
+TURN_ERROR = "It isn't your turn right now."
+INPUT_ERROR = "Invalid input: %s. Try again."
+WAIT_MSG = "Awaiting players... (%s/%s)"
+ROLE_PROMPT = "You are playing as: %s\n"
+MOVE_PROMPT = ("It's your turn! Here are the moves left:\n"
+               "%s\n"
+               "Enter the move you would like to perform:\n")
+VALID_ROWS = {
+    'A': 0,
+    'B': 1,
+    'C': 2
 }
-VALID_COLS    = {
-    '1' : 0,
-    '2' : 1,
-    '3' : 2
+VALID_COLS = {
+    '1': 0,
+    '2': 1,
+    '3': 2
 }
-SYMBOLS       = [
+SYMBOLS = [
     'X',
     'O'
 ]
 
 class Board(object):
     def __init__(self):
-        self.ROLE        = {}
-        self.PLAYERS     = []
-        self.PLAY_PTR    = 0
+        self.ROLE = {}
+        self.PLAYERS = []
+        self.PLAY_PTR = 0
         self.NUM_PLAYERS = 0
-        self.GAME_BOARD  = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
-        self.MOVES_LEFT  = self.move_set()
+        self.GAME_BOARD = [[shared.NULL_CHAR] * shared.BOARD_COLS for _ in range(shared.BOARD_ROWS)]
+        self.MOVES_LEFT = self.move_set()
 
     def move_set(self):
         moves = set()

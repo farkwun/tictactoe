@@ -18,9 +18,9 @@ EXIT_CODES = {
 }
 
 DISPLAY = {
-    'X' : 'X',
-    'O' : 'O',
-    shared.NULL_CHAR : ' '
+    'X': 'X',
+    'O': 'O',
+    shared.NULL_CHAR: ' '
 }
 
 GAME_OVER = False
