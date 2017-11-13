@@ -98,7 +98,7 @@ def broadcast_state():
     broadcast(message)
 
 def broadcast_game():
-    game_state = ['G']
+    game_state = [tictactoe.shared.GAME_INFO]
     for row in range(len(BOARD.GAME_BOARD)):
         for col in range(len(BOARD.GAME_BOARD)):
             game_state.append(BOARD.GAME_BOARD[row][col])
