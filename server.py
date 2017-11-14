@@ -194,13 +194,16 @@ def point_to_move(point):
     return move
 
 def enemy_is_winning(symbol_dict):
+    if len(symbol_dict.keys()) > 1:
+        return False
     for key, value in symbol_dict.items():
         if value > 1 and key != BOARD.ROLE[tictactoe.shared.AI]:
             return True
     return False
 
 def can_win_line(symbol_dict):
-    return BOARD.ROLE[tictactoe.shared.AI] in symbol_dict
+    return (BOARD.ROLE[tictactoe.shared.AI] in symbol_dict and
+            len(symbol_dict.keys()) <= 1)
 
 def will_win_on_move(symbol_dict):
     ai_symbol = BOARD.ROLE[tictactoe.shared.AI]
