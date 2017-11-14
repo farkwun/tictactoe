@@ -47,6 +47,7 @@ class Board(object):
             [tictactoe.shared.NULL_CHAR] * tictactoe.shared.BOARD_COLS
             for _ in range(tictactoe.shared.BOARD_ROWS)
         ]
+        self.LINES = self.generate_lines()
         self.MOVES_LEFT = self.move_set()
 
     def move_set(self):
@@ -56,6 +57,29 @@ class Board(object):
                 moves.add(row + col)
         return moves
 
+    def generate_lines(self):
+        lines = []
+
+        # rows and cols
+        for row in range(tictactoe.shared.BOARD_ROWS):
+            temp_rows = []
+            temp_cols = []
+            for col in range(tictactoe.shared.BOARD_COLS):
+                temp_rows.append((row, col))
+                temp_cols.append((col, row))
+            lines.append(temp_rows)
+            lines.append(temp_cols)
+
+        # diagonals
+        diag_a = []
+        diag_b = []
+        for row in range(tictactoe.shared.BOARD_ROWS):
+            diag_a.append((row, row))
+            diag_b.append((tictactoe.shared.BOARD_ROWS - row - 1, row))
+        lines.append(diag_a)
+        lines.append(diag_b)
+
+        return lines
 
 BOARD = Board()
 
@@ -123,34 +147,12 @@ def is_winning_set(char_set):
             len(char_set) == 1)
 
 def get_winner():
-    # check rows
-    for row in range(tictactoe.shared.BOARD_ROWS):
-        temp = set(BOARD.GAME_BOARD[row])
-        if is_winning_set(temp):
-            return temp.pop()
-
-    # check cols
-    for col in range(tictactoe.shared.BOARD_COLS):
+    for line in BOARD.LINES:
         temp = set()
-        for row in range(tictactoe.shared.BOARD_ROWS):
+        for row, col in line:
             temp.add(BOARD.GAME_BOARD[row][col])
         if is_winning_set(temp):
             return temp.pop()
-
-    # check diags
-    temp = set()
-    for row in range(tictactoe.shared.BOARD_ROWS):
-        temp.add(BOARD.GAME_BOARD[row][row])
-
-    if is_winning_set(temp):
-        return temp.pop()
-
-    temp = set()
-    for row in range(tictactoe.shared.BOARD_ROWS):
-        temp.add(BOARD.GAME_BOARD[row][tictactoe.shared.BOARD_ROWS - row - 1])
-
-    if is_winning_set(temp):
-        return temp.pop()
 
     if not BOARD.MOVES_LEFT:
         return "Nobody"
