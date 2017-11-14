@@ -81,6 +81,11 @@ class Board(object):
 
         return lines
 
+    def add_player(self, player_id):
+        self.ROLE[player_id] = SYMBOLS[self.NUM_PLAYERS]
+        self.PLAYERS.append(player_id)
+        self.NUM_PLAYERS += 1
+
 BOARD = Board()
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -119,14 +124,9 @@ def await_players():
     while BOARD.NUM_PLAYERS < tictactoe.shared.MAX_PLAYERS:
         data, address = sock.recvfrom(tictactoe.shared.BUFLEN)
         if address not in BOARD.ROLE:
-            BOARD.ROLE[address] = SYMBOLS[BOARD.NUM_PLAYERS]
-            BOARD.PLAYERS.append(address)
-            BOARD.NUM_PLAYERS += 1
+            BOARD.add_player(address)
         elif data == tictactoe.shared.AI:
-            address = tictactoe.shared.AI
-            BOARD.ROLE[address] = SYMBOLS[BOARD.NUM_PLAYERS]
-            BOARD.PLAYERS.append(address)
-            BOARD.NUM_PLAYERS += 1
+            BOARD.add_player(tictactoe.shared.AI)
         else:
             send_to_address(INPUT_ERROR % data, address)
         broadcast_state()
