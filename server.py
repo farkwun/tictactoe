@@ -193,6 +193,20 @@ def point_to_move(point):
 
     return move
 
+def moves_and_symbols_from(line):
+    line_symbols = {}
+    moves = set()
+    for point in line:
+        symbol = BOARD.GAME_BOARD[point[0]][point[1]]
+        if symbol == tictactoe.shared.NULL_CHAR:
+            moves.add(point_to_move(point))
+        elif symbol in line_symbols:
+            line_symbols[symbol] += 1
+        else:
+            line_symbols[symbol] = 1
+
+    return moves, line_symbols
+
 def enemy_is_winning(symbol_dict):
     if len(symbol_dict.keys()) > 1:
         return False
@@ -218,20 +232,9 @@ def get_ai_move():
     ideal_moves = set()
 
     for line in BOARD.LINES:
-        line_symbols = {}
-        moves = set()
-        for point in line:
-            symbol = BOARD.GAME_BOARD[point[0]][point[1]]
-            if symbol == tictactoe.shared.NULL_CHAR:
-                moves.add(point_to_move(point))
-            elif symbol in line_symbols:
-                line_symbols[symbol] += 1
-            else:
-                line_symbols[symbol] = 1
-
+        moves, line_symbols = moves_and_symbols_from(line)
         if moves and will_win_on_move(line_symbols):
             return moves.pop()
-
         if moves and enemy_is_winning(line_symbols):
             enemy_block_moves = enemy_block_moves.union(moves)
         elif moves and can_win_line(line_symbols):
