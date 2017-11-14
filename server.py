@@ -177,9 +177,78 @@ def set_board_at(move, value):
     BOARD.GAME_BOARD[row][col] = value
     BOARD.MOVES_LEFT.remove(move)
 
+def point_to_move(point):
+    row, col = point[0], point[1]
+    move = ""
+
+    for key, value in VALID_ROWS.items():
+        if value == row:
+            move += key
+            break
+
+    for key, value in VALID_COLS.items():
+        if value == col:
+            move += key
+            break
+
+    return move
+
+def enemy_is_winning(symbol_dict):
+    for key, value in symbol_dict.items():
+        if value > 1 and key != BOARD.ROLE[tictactoe.shared.AI]:
+            return True
+    return False
+
+def can_win_line(symbol_dict):
+    return BOARD.ROLE[tictactoe.shared.AI] in symbol_dict
+
+def will_win_on_move(symbol_dict):
+    ai_symbol = BOARD.ROLE[tictactoe.shared.AI]
+    return (ai_symbol in symbol_dict and
+            symbol_dict[ai_symbol] == tictactoe.shared.BOARD_ROWS - 1)
+
 def get_ai_move():
-    temp = tuple(BOARD.MOVES_LEFT)
-    return random.choice(temp)
+    center = (tictactoe.shared.BOARD_ROWS//2, tictactoe.shared.BOARD_COLS//2)
+    center_move = point_to_move(center)
+    enemy_block_moves = set()
+    win_attempt_moves = set()
+    ideal_moves = set()
+
+    for line in BOARD.LINES:
+        line_symbols = {}
+        moves = set()
+        for point in line:
+            symbol = BOARD.GAME_BOARD[point[0]][point[1]]
+            if symbol == tictactoe.shared.NULL_CHAR:
+                moves.add(point_to_move(point))
+            elif symbol in line_symbols:
+                line_symbols[symbol] += 1
+            else:
+                line_symbols[symbol] = 1
+
+        if moves and will_win_on_move(line_symbols):
+            return moves.pop()
+
+        if moves and enemy_is_winning(line_symbols):
+            enemy_block_moves = enemy_block_moves.union(moves)
+        elif moves and can_win_line(line_symbols):
+            win_attempt_moves = win_attempt_moves.union(moves)
+
+    ideal_moves = enemy_block_moves.intersection(win_attempt_moves)
+
+    if ideal_moves:
+        return ideal_moves.pop()
+
+    if enemy_block_moves:
+        return enemy_block_moves.pop()
+
+    if win_attempt_moves:
+        return win_attempt_moves.pop()
+
+    if center_move in BOARD.MOVES_LEFT:
+        return center_move
+
+    return random.choice(tuple(BOARD.MOVES_LEFT))
 
 def get_move_from(player):
     valid_move = None
