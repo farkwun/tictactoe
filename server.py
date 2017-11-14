@@ -4,6 +4,7 @@ https://pymotw.com/2/socket/udp.html
 """
 import socket
 import sys
+import random
 
 import tictactoe.shared
 
@@ -14,7 +15,9 @@ if len(sys.argv) <= 1:
 # Constants
 TURN_ERROR = "It isn't your turn right now."
 INPUT_ERROR = "Invalid input: %s. Try again."
-WAIT_MSG = "Awaiting players... (%s/%s)"
+WAIT_MSG = "Awaiting players... (%s/%s).\n"
+AI_PROMPT = ("Type '%s' if you would like to add an AI." %
+             tictactoe.shared.AI)
 ROLE_PROMPT = "You are playing as: %s\n"
 MOVE_PROMPT = ("It's your turn! Here are the moves left:\n"
                "%s\n"
@@ -65,7 +68,8 @@ print('Launching server on %s port %s' % server_address)
 sock.bind(server_address)
 
 def send_to_address(message, address):
-    sock.sendto(message, address)
+    if address != tictactoe.shared.AI:
+        sock.sendto(message, address)
 
 def broadcast(message):
     for address in BOARD.PLAYERS:
@@ -89,16 +93,23 @@ def increment_play_order():
 def await_players():
     print("Waiting for players...")
     while BOARD.NUM_PLAYERS < tictactoe.shared.MAX_PLAYERS:
-        _, address = sock.recvfrom(tictactoe.shared.BUFLEN)
+        data, address = sock.recvfrom(tictactoe.shared.BUFLEN)
         if address not in BOARD.ROLE:
             BOARD.ROLE[address] = SYMBOLS[BOARD.NUM_PLAYERS]
             BOARD.PLAYERS.append(address)
             BOARD.NUM_PLAYERS += 1
+        elif data == tictactoe.shared.AI:
+            address = tictactoe.shared.AI
+            BOARD.ROLE[address] = SYMBOLS[BOARD.NUM_PLAYERS]
+            BOARD.PLAYERS.append(address)
+            BOARD.NUM_PLAYERS += 1
+        else:
+            send_to_address(INPUT_ERROR % data, address)
         broadcast_state()
 
 def broadcast_state():
     message = WAIT_MSG % (BOARD.NUM_PLAYERS, tictactoe.shared.MAX_PLAYERS)
-    broadcast(message)
+    broadcast(message + AI_PROMPT)
 
 def broadcast_game():
     game_state = [tictactoe.shared.GAME_INFO]
@@ -164,8 +175,14 @@ def set_board_at(move, value):
     BOARD.GAME_BOARD[row][col] = value
     BOARD.MOVES_LEFT.remove(move)
 
+def get_ai_move():
+    temp = tuple(BOARD.MOVES_LEFT)
+    return random.choice(temp)
+
 def get_move_from(player):
     valid_move = None
+    if player == tictactoe.shared.AI:
+        return get_ai_move()
     prompt_player(player)
     while not valid_move:
         move, address = sock.recvfrom(tictactoe.shared.BUFLEN)
