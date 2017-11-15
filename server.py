@@ -233,11 +233,13 @@ def get_ai_move():
 
     for line in BOARD.LINES:
         moves, line_symbols = moves_and_symbols_from(line)
-        if moves and will_win_on_move(line_symbols):
+        if not moves:
+            continue
+        if will_win_on_move(line_symbols):
             return moves.pop()
-        if moves and enemy_is_winning(line_symbols):
+        if enemy_is_winning(line_symbols):
             enemy_block_moves = enemy_block_moves.union(moves)
-        elif moves and can_win_line(line_symbols):
+        elif can_win_line(line_symbols):
             win_attempt_moves = win_attempt_moves.union(moves)
 
     ideal_moves = enemy_block_moves.intersection(win_attempt_moves)
